@@ -44,7 +44,7 @@ export class EventProcessor {
 
     public processSetKey(): Observable<InterpretEventResult> {
         return this.eventType === MenuOptionAnswers.setValue
-            ? of(Object.assign(TO_NEXT, {nextQuestion: setValue}))
+            ? of({nextQuestion: setValue, ...TO_NEXT})
             : this.getValue()
     }
 
