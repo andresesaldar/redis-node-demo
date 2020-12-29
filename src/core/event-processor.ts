@@ -2,7 +2,7 @@ import {Observable, of} from "rxjs";
 import {InterpretEventResult} from "../interfaces";
 import {MenuOptionAnswers} from "../enums";
 import {RedisInterpreter} from "./redis-interpreter";
-import {map, mergeMap, tap} from "rxjs/operators";
+import {map, tap} from "rxjs/operators";
 import {bgMagenta} from "chalk";
 import {setValue} from "../cli/questions";
 import {Prompt} from "../cli";
@@ -43,27 +43,29 @@ export class EventProcessor {
     }
 
     public processSetKey(): Observable<InterpretEventResult> {
-        return of( []).pipe(
-            mergeMap(
-                () => this.eventType === MenuOptionAnswers.setValue
-                    ? of(Object.assign(TO_NEXT, {nextQuestion: setValue}))
-                    : this.getValue()
+        return this.eventType === MenuOptionAnswers.setValue
+            ? of(Object.assign(TO_NEXT, {nextQuestion: setValue}))
+            : this.getValue()
+    }
+
+    public processSetValue(response: string): Observable<InterpretEventResult> {
+        return this.goBackToStart(
+            this.redisClient.set(this.selectedKey, response).pipe(
+                tap((value) => console.log(bgMagenta.black(`[SET] Result: `, value)))
             )
         )
     }
 
-    public processSetValue(response: string): Observable<InterpretEventResult> {
-        return this.redisClient.set(this.selectedKey, response).pipe(
-            tap((value) => console.log(bgMagenta.black(`[SET] Result: `, value))),
-            map<any,InterpretEventResult>(() => TO_START)
+    private getValue(): Observable<InterpretEventResult> {
+        return this.goBackToStart(
+            this.redisClient.get(this.selectedKey).pipe(
+                tap((value) => console.log(bgMagenta.black(`[GET] Value of ${this.selectedKey}: `, value)))
+            )
         )
     }
 
-    private getValue(): Observable<InterpretEventResult> {
-        return this.redisClient.get(this.selectedKey).pipe(
-            tap((value) => console.log(bgMagenta.black(`[GET] Value of ${this.selectedKey}: `, value))),
-            map<any,InterpretEventResult>(() => TO_START)
-        )
+    private goBackToStart(source$: Observable<any>): Observable<InterpretEventResult> {
+        return source$.pipe(map<any,InterpretEventResult>(() => TO_START))
     }
 
 }

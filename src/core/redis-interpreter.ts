@@ -47,9 +47,14 @@ export class RedisInterpreter {
         const result$ = new Subject();
         this.client.set(key, value, (error, data) => {
             console.log(bgGreenBright.black("[REDIS SET]", key));
-            error ? result$.error(error) : result$.next(data);
+            if(error) {
+                result$.error(error)
+                this.publisher.publish("setError", key)
+            } else {
+                result$.next(data);
+                this.publisher.publish("set", key)
+            }
             result$.complete();
-            this.publisher.publish("set", key)
         })
         return result$;
     }
