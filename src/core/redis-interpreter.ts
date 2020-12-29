@@ -1,8 +1,8 @@
 import {bgGreenBright, bgRed, bgBlueBright} from "chalk";
-import {ClientOpts, createClient, RedisClient} from "redis";
+import {createClient, RedisClient} from "redis";
 import {fromEvent, Observable, Subject, throwError} from "rxjs";
 import {mergeMap} from "rxjs/operators";
-import {redisHost} from "../configurations";
+import {redisHost, redisPort} from "../configurations";
 
 export class RedisInterpreter {
 
@@ -18,12 +18,12 @@ export class RedisInterpreter {
 
     private constructor() {
         console.log(bgGreenBright.black("[INFO] INITIALIZING REDIS CLIENT"))
-        const options: ClientOpts = {
-            host: redisHost ? redisHost : undefined
-        }
-        this.client = createClient(options);
-        this.publisher = createClient(options);
-        this.subscriber = createClient(options);
+        this.client = createClient({
+            host: redisHost ? redisHost : undefined,
+            port: redisPort ? redisPort : undefined
+        });
+        this.publisher = this.client.duplicate();
+        this.subscriber = this.client.duplicate();
         this.listenSubscriberEvents();
         this.listenClientErrors();
     }
