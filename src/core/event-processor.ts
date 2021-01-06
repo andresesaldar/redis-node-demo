@@ -37,15 +37,28 @@ export class EventProcessor {
         switch (response) {
             case MenuOptionAnswers.getValue: return of(TO_SET_KEY)
             case MenuOptionAnswers.setValue: return of(TO_SET_KEY)
+            case MenuOptionAnswers.deleteKey: return of(TO_SET_KEY)
             case MenuOptionAnswers.close: return of(TO_FINISH)
             default: return of(TO_START)
         }
     }
 
     public processSetKey(): Observable<InterpretEventResult> {
-        return this.eventType === MenuOptionAnswers.setValue
-            ? of({nextQuestion: setValue, ...TO_NEXT})
-            : this.getValue()
+        if(this.eventType === MenuOptionAnswers.setValue) {
+            return of({nextQuestion: setValue, ...TO_NEXT})
+        } else if(this.eventType === MenuOptionAnswers.deleteKey) {
+            return this.processDeleteKey()
+        } else {
+            return this.getValue()
+        }
+    }
+
+    public processDeleteKey(): Observable<InterpretEventResult> {
+        return this.goBackToStart(
+            this.redisClient.deleteKey(this.selectedKey).pipe(
+                tap((value) => console.log(bgMagenta.black(`[DEL] Result: `, value)))
+            )
+        )
     }
 
     public processSetValue(response: string): Observable<InterpretEventResult> {

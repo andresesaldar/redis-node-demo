@@ -12,6 +12,10 @@ export const menuOption:  ListQuestion<any> = {
             value: MenuOptionAnswers.setValue
         },
         {
+            name: "Eliminar clave",
+            value: MenuOptionAnswers.deleteKey
+        },
+        {
             name: "Obtener valor",
             value: MenuOptionAnswers.getValue
         },
